@@ -21,10 +21,10 @@ Search for this, and you will find!
   <p align="center">
     The purpose of this code is to break data into "laps", e.g. segments of data that are defined by a clear start condition and end condition. The code finds when a given path meets the "start" condition, then meets the "end" condition, and returns every portion of the path that is inside both conditions. Advanced features of the code include the ability to return the row indices defining each lap's data, as well as the path portions prior and after the lap area in case the "run in" or "run out" areas are needed.
     <br />
-    <a href="https://github.com/ivsg-psu/Publications_Journals_2022RSS"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/ivsg-psu/Publications_Journals_2022RSS/tree/main/Documents"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/ivsg-psu/Publications_Journals_2022RSS/Documents">View Demo</a>
+    <a href="https://github.com/ivsg-psu/Publications_Journals_2022RSS">View Demo</a>
     ·
     <a href="https://github.com/ivsg-psu/Publications_Journals_2022RSS/issues">Report Bug</a>
     ·
