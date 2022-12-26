@@ -15,7 +15,8 @@ Search for this, and you will find!
   <h2 align="center"> FeatureExtraction_DataClean_BreakDataIntoLaps
   </h2>
 
-<img src=".\Images\RaceTrack.jpg" alt="main laps picture" width="960" height="540">
+<p align="center">
+   <img src=".\Documents\title_imag.png" alt="main laps picture" width="560" height="350">
 
   <p align="center">
     The purpose of this code is to break data into "laps", e.g. segments of data that are defined by a clear start condition and end condition. The code finds when a given path meets the "start" condition, then meets the "end" condition, and returns every portion of the path that is inside both conditions. Advanced features of the code include the ability to return the row indices defining each lap's data, as well as the path portions prior and after the lap area in case the "run in" or "run out" areas are needed.
