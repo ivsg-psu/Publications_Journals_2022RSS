@@ -8,15 +8,15 @@ Search for this, and you will find!
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <!-- <a href="https://github.com/ivsg-psu/FeatureExtraction_Association_PointToPointAssociation">
+  <!-- <a href="https://github.com/ivsg-psu/Publications_Journals_2022RSS">
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a> -->
 
-  <h2 align="center"> FeatureExtraction_DataClean_BreakDataIntoLaps
+  <h2 align="center"> Boxes-based Representation and Data Sharing of Road Surface Friction for CAVs
   </h2>
 
 <p align="center">
-   <img src=".\Documents\title_imag.png" alt="main laps picture" width="560" height="350">
+   <img src=".\Documents\title_imag_2.png" alt="data flow picture" width="880" height="400">
 
   <p align="center">
     The purpose of this code is to break data into "laps", e.g. segments of data that are defined by a clear start condition and end condition. The code finds when a given path meets the "start" condition, then meets the "end" condition, and returns every portion of the path that is inside both conditions. Advanced features of the code include the ability to return the row indices defining each lap's data, as well as the path portions prior and after the lap area in case the "run in" or "run out" areas are needed.
