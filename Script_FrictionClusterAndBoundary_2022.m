@@ -1,4 +1,4 @@
-%%%%%%%%%%%%  Script .m   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%  Script_FrictionClusterAndBoundary_2022.m   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Script Purpose: code for paper "Boxes-based Representation and Data Sharing of Road Surface Friction for CAVs"
 % Matlab work Path: ~\Publications_Journals_2022RSS
 % Author:       Liming
@@ -6,7 +6,7 @@
 %
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% step 0: Prepare the workspace
+%% Section 0: Prepare the workspace
 % Clear workspace, figures, and console
 clear all;  %#ok<CLALL> % Clears workspace to remove any old variables
 close all;  % Close all open figures
@@ -14,42 +14,48 @@ clc;        % Clear console space
 
 addpath('./Functions/');    % all the functions and wrapper class
 addpath('./Data/');    % all the .mat data files
-addpath(genpath('../Images/'));    % all the image files
+addpath(genpath('./Images/'));    % all the image files
 
 dir.datafiles = ['.' filesep 'Data' filesep]; % all the .mat data files
 
-% flag setup 
-flag.doDebug = false; % set to 'true' to print trajectory information to command window
-flag.friction_noise = true;
-flag.xEast_noise = true;
-flag.yNorth_noise = true;
-flag.cluster_confidence_interval = false;
 
-Axis_label_FontSize = 12;
-index_ref = 39;
-index_lane_center_lateral=[20 58];
-
-%% Step1: load/generate road grid and true friction data
-%NOTE: All the data already queried from database. Please download the data
+%% ======== Section 1: load data ======== 
+%NOTE: All the data already queried from database. Please download the queried data
 %before running this data load code
+
+%1. load/generate road grid and true friction data
+
 listOfSections = 7002; % focus on the 256/7002 road segment
 load(strcat(dir.datafiles,'sectionRef_table_section_',strjoin(cellstr(num2str(listOfSections)),'_'), '.mat'),'sectionRef_table')
 load(strcat(dir.datafiles,'FrictionGrid_ref_section_',strjoin(cellstr(num2str(listOfSections)),'_'), '.mat'),'FrictionGrid_ref')
 
-%% Step2: load friction data or run vehicle dynamic simualtion get the friction measurement data
+%2. load friction data or run vehicle dynamic simualtion get the friction measurement data
 % check runCoupledPathFollowingSim.m
 Trip_id = 2022;
 load(strcat(dir.datafiles,'trajectory_table_trips',strjoin(cellstr(num2str(Trip_id)),'_'),'.mat'),'trajectory_table')
 trajectory_table = trajectory_table(trajectory_table.section_id == listOfSections,:);
 
-%% Step3: load friction measurement
+%3. load friction measurement
 
 % load data friction true and measurement data which is queried using runCoupledPathFollowingSim.m
 load(strcat(dir.datafiles,'frictionMeasure_table_processed_section_7002.mat'),'friction_measurement_processed')
 % 
 
+%% ======== Section 2: setup flags ======= 
 seed = 1;
 rng(seed);
+
+% flag setup 
+flag.doDebug = false; % set to 'true' to print trajectory information to command window
+flag.plot = true; % set to 'true' to plot
+flag.friction_noise = true; % set to 'true' to add specific noise into the friction measurement data
+flag.xEast_noise = true; % set to 'true' to add specific noise into vehicle localization data of x
+flag.yNorth_noise = true; % set to 'true' to add specific noise into vehicle localization data of y
+flag.cluster_confidence_interval = false; % set to 'true' to cluster the confidence interval 
+
+Axis_label_FontSize = 12;
+index_ref = 39;
+index_lane_center_lateral=[20 58];
 
 if flag.friction_noise
     friction_measurement_noisy_origin = friction_measurement_processed.friction_measurement_noisy;
@@ -77,9 +83,9 @@ else
     friction_measurement_processed.north_noisy = friction_measurement_processed.contact_point_north;
 end
 
-
+% plot noisy position 
 if flag.doDebug
-    %% plot noisy position 
+    
     h_fig = figure(12048); % thesis
     set(h_fig,'Name','trajectory true and noisy');
     width=640;%
@@ -116,9 +122,9 @@ if flag.doDebug
 
 end
 
-%% plot true and measurement friction data
-if flag.doDebug
-    h_fig = figure(20945); % thesis
+%plot true and measurement friction data
+if flag.plot
+    h_fig = figure(20945); % thesis,plot true and measurement friction data
     set(h_fig,'Name','friction true and noisy measurement');
     width=640;%
     height=450;%
@@ -184,12 +190,12 @@ if flag.doDebug
     %             ax.YMinorGrid = 'on';
     %             ax.MinorGridAlpha = 0.5
     box on
-    %     saveas(h_fig,'Figures\friction_measurement_withSwerve.svg')
+    saveas(h_fig,'Images\friction_measurement_withSwerve.svg')
     %
-    %     saveas(h_fig,'Figures\friction_measurement_withSwerve.pdf')
-    %     savefig(h_fig,'Figures\friction_measurement_withSwerve.fig')
-    %%
-    h_fig = figure(20946); % thesis
+    %     saveas(h_fig,'Images\friction_measurement_withSwerve.pdf')
+    %     savefig(h_fig,'Images\friction_measurement_withSwerve.fig')
+    %
+    h_fig = figure(20946); % thesis, friction true
     set(h_fig,'Name','friction true');
     width=640;%
     height=450;%
@@ -203,7 +209,6 @@ if flag.doDebug
     %     surf(FrictionGrid_ref.position_x,FrictionGrid_ref.position_y,FrictionGrid_ref.friction,'EdgeColor','r','FaceColor','none')
     scatter3(friction_measurement_processed.contact_point_east,friction_measurement_processed.contact_point_north,...
         friction_measurement_processed.friction_measurement_noisy,10, friction_measurement_processed.friction_measurement_noisy,'.');
-    
     
     grid on
     xlabel('xEast [m]')
@@ -226,11 +231,10 @@ if flag.doDebug
     %             ax.YMinorGrid = 'on';
     %             ax.MinorGridAlpha = 0.5
     box on
+    saveas(h_fig,'Images\friction_true_ENU.svg')
     
-    
-    
-    %% surf plot and image of true friction data
-    
+   
+    %surf plot and image of true friction data
     h_fig = figure(4444);
     set(h_fig,'Name','True Friction ENU');
     width=540;%
@@ -276,7 +280,7 @@ if flag.doDebug
         'LineStyle','none',...
         'FontSize',14,...
         'FontName','Times New Roman');
-    
+    saveas(h_fig,'Images\friction_true_enu_surf.svg')
     
     h_fig=figure(4445);
     set(h_fig,'Name','True Friction STH');
@@ -315,22 +319,24 @@ if flag.doDebug
     axes_handle.GridLineStyle = '-.';
     axes_handle.GridColor = 'k';
     axes_handle.GridAlpha = 0.1;
+    saveas(h_fig,'Images\friction_true_enu_LTH.svg')
     
-    
-    figure(4446)
-    clf
-    image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-        [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-        FrictionGrid_ref.friction,'CDataMapping','scaled')
-    xlabel('s[m]')
-    ylabel('t[m]')
-    %     axis equal
-    box on
+    if flag.doDebug
+        figure(4446)
+        clf
+        image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
+            [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
+            FrictionGrid_ref.friction,'CDataMapping','scaled')
+        xlabel('s[m]')
+        ylabel('t[m]')
+        %     axis equal
+        box on
+    end
 end
 FrictionGrid_ref.friction_vector = reshape(FrictionGrid_ref.friction,[],1);
 
-%% Step 4:  cluster the true data
-if 1==1 %flag.doDebug
+%% ======== Section 3: cluster the true friction data, used to debug the cluster algorithm ====
+if flag.doDebug
     % split friction data into groups
     nbs_friction_grid = 10;
     [counts,edges] = histcounts(FrictionGrid_ref.friction,nbs_friction_grid,'BinLimits',[0,1]); % Calculate a 101-bin histogram for the image.
@@ -344,450 +350,302 @@ if 1==1 %flag.doDebug
     histogram(FrictionGrid_ref.friction_vector,edges)
     %stem(edges,counts)
     %% find boundary of each cluster
-    method_boundary = 4;
-    if method_boundary ==1 % cluster find the boundaries through nearest neighbor
-        threshold = 0.15; %0.145; %meters, the Diagonal length of grid( 0.2 > threshold >0.141)
-        nbs_neighbor = 8 ; % the number of neighbor nodes for each innner grid
-        road_friction_cluster_boundary = [];
-        boundary_index = [];
-        for i_cluster=1:nbs_cluster
-            
-            %     cluster_friction_position = results_road_lane_grid(cluster_idx==i_cluster,:);
-            cluster_index = find(cluster_idx == i_cluster);
-            cluster_grid = [FrictionGrid_ref.position_x_vector(cluster_index) FrictionGrid_ref.position_y_vector(cluster_index)];
-            cluster_friction = FrictionGrid_ref.friction_vector(cluster_index);
-            Md_cluster_grid = KDTreeSearcher(cluster_grid); % Mdl is a KDTreeSearcher model. By default, the distance metric it uses to search for neighbors is Euclidean distance.
-            [~,D] = knnsearch(Md_cluster_grid,cluster_grid,'k',nbs_neighbor+1);
-            %boundary_index = Idx(D(:,nbs_neighbor+1)>threshold,1);
-            cluster_boundary_index = find(D(:,nbs_neighbor+1)>threshold);
-            road_friction_cluster_boundary = vertcat(road_friction_cluster_boundary,[cluster_grid(cluster_boundary_index,:) cluster_friction(cluster_boundary_index)] );
-            boundary_index =  vertcat(boundary_index,cluster_index(cluster_boundary_index));
-            clear D
-            
-            [row,col] = ind2sub(sz,ind)
-        end
-    elseif method_boundary ==2
-        % step 1 : find the super pixel using the k-means cluster results
-        Label_matrix = zeros(size(FrictionGrid_ref.friction)); % cluster matrix
-        for i_cluster=1:nbs_cluster
-            
-            cluster_index = find(cluster_idx == i_cluster);
-            %         [cluster_sub_row,cluster_sub_col] = ind2sub(size(FrictionGrid_ref.friction),cluster_index); % cluster matrix subscripts
-            
-            cluster_friction = mean(FrictionGrid_ref.friction(cluster_index),'all'); %value of each cluster
-            
-            Label_matrix(cluster_index) = cluster_friction; % assign values to each cluster
-            
-        end
-        % step 2 : find the boundaries using the boundarymask functon
-        
-        Label_matrix_pad = padarray(Label_matrix,[1 1],0,'both');
-        
-        boundary_pad = boundarymask(Label_matrix_pad);
-        boundary = boundary_pad(2:end-1,2:end-1);
-        
-        figure(4447)
-        %     imshow(label2rgb(L))
-        clf
-        image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-            [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-            Label_matrix,'CDataMapping','scaled')
-        %     clf
-        %     im = image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-        %         [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-        %         labeloverlay(FrictionGrid_ref.friction,boundary,'Transparency',0));
-        
-        figure(4448) % original and cluster data
-        clf
-        scatter3(reshape(FrictionGrid_ref.position_s,[],1),reshape(FrictionGrid_ref.position_t,[],1),reshape(FrictionGrid_ref.friction,[],1),10,reshape(FrictionGrid_ref.friction,[],1),'.');
-        hold on
-        scatter3(reshape(FrictionGrid_ref.position_s,[],1),reshape(FrictionGrid_ref.position_t,[],1),reshape(boundary,[],1),20,reshape(boundary,[],1),'r.');
-        
-        view(0,90)
-        zlim([0 1])
-        %     xlim([-5 500])
-        xlabel('s[m]')
-        ylabel('t[m]')
-        
-        
-    elseif method_boundary ==3
-        [L,N] = superpixels(FrictionGrid_ref.friction,10); % 2-D superpixel oversegmentation of images
-        
-        mask = boundarymask(L);
-        
-        figure(4447)
-        %     imshow(label2rgb(L))
-        image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-            [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-            L,'CDataMapping','scaled')
-        
-        figure(4448)
-        %     imshow(label2rgb(L))
-        imshow(mask)
-        image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-            [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-            mask,'CDataMapping','scaled')
-        figure(4449)
-        %     im = image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-        %         [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-        %         labeloverlay(FrictionGrid_ref.friction,mask,'Transparency',0));
-        %
-        scatter3(FrictionGrid_ref.position_s,FrictionGrid_ref.position_t,mask,10, mask,'.');
-        
-        hold on
-    else
-        %     nbs_cluster = 3;
-        %     nbs_friction_grid = 5;
-        lower_friction_bound = min(FrictionGrid_ref.friction,[],'all');
-        upper_friction_bound = max(FrictionGrid_ref.friction,[],'all');
-        friction_interval = 0.1
-        nbs_friction_grid = round((upper_friction_bound-lower_friction_bound)/friction_interval);
-        %     [counts,edges] = histcounts(FrictionGrid_ref.friction,...
-        %         nbs_friction_grid,'BinLimits',[lower_friction_bound,upper_friction_bound]); % Calculate a 101-bin histogram for the image.
-        [counts,edges] = histcounts(FrictionGrid_ref.friction,...
-            round(1/friction_interval),'BinLimits',[0,1.0],'Normalization', 'probability' ); % Calculate a 101-bin histogram for the image.
-        
-        % histtogram of friction data
-        h_fig = figure(15567);
-        set(h_fig,'Name','histogram of friction data');
-        histogram(reshape(FrictionGrid_ref.friction,[],1),edges)
-        %     stem(edges,counts)
-        
-        % execute the k-means cluster
-        nbs_cluster = length(counts(counts>0.01))+1;
-        
-        data = [reshape(FrictionGrid_ref.position_s,[],1)/max(FrictionGrid_ref.position_s(1,:)),...
-            0.5+reshape(FrictionGrid_ref.position_t,[],1)/(2*max(FrictionGrid_ref.position_t(1,:))),...
-            30*reshape(FrictionGrid_ref.friction,[],1)];
-        [cluster_idx,cluster_centroid_locations,sumDist] = kmeans(data,nbs_cluster,'Replicates',3,...
-            'Distance','cityblock','Display','final'); % sqeuclidean,  cityblock
-        figure(5559)
-        clf
-        hold on
-        box on
-        grid on
-        view(0,90)
-        zlim([0 1])
-        %     xlim([-5 500])
-        xlabel('s[m]')
-        ylabel('t[m]')
-        for i_cluster=1:nbs_cluster
-            cluster_index = find(cluster_idx == i_cluster);
-            scatter3(FrictionGrid_ref.position_s(cluster_index),FrictionGrid_ref.position_t(cluster_index),FrictionGrid_ref.friction(cluster_index),10,'.');
-        end
-        
-        % step 1 : find the super pixel using the k-means cluster results
-        Label_matrix = zeros(size(FrictionGrid_ref.friction)); % cluster matrix
-        for i_cluster=1:nbs_cluster
-            
-            cluster_index = find(cluster_idx == i_cluster);
-            %         [cluster_sub_row,cluster_sub_col] = ind2sub(size(FrictionGrid_ref.friction),cluster_index); % cluster matrix subscripts
-            
-            cluster_friction = mean(FrictionGrid_ref.friction(cluster_index),'all'); %value of each cluster
-            
-            Label_matrix(cluster_index) = cluster_friction; % assign values to each cluster
-            
-            sub_cluster = zeros(size(FrictionGrid_ref.friction));
-            sub_cluster(cluster_index) = Label_matrix(cluster_index);
-            [L,n] = bwlabel(sub_cluster,4);
-            for i=1:n
-                index_subcluster = find(L==i);
-                if length(index_subcluster)<50 % find samll sub cluster
-                    Label_matrix(index_subcluster) = NaN;
-                end
-            end
-            
-        end
-        % fill the samll holes uing nearest data
-        Label_matrix = fillmissing(Label_matrix,'nearest',2,'EndValues','nearest'); % by column
-        
-        
-        %%step 2 : find the boundaries using the boundarymask functon
-        Label_matrix(Label_matrix==0) =1;
-        Label_matrix_pad = padarray(Label_matrix,[1 1],0,'both');
-        
-        boundary_pad = boundarymask(Label_matrix_pad);
-        %     boundary_pad = edge(Label_matrix_pad,'Canny',0.002);
-        
-        FrictionGrid_ref.boundary = double(boundary_pad(2:end-1,2:end-1));
-        FrictionGrid_ref.boundary(FrictionGrid_ref.boundary==0)= NaN;
-        %%
-        
-        mid_results = diff(diff(FrictionGrid_ref.boundary,1,1),1,2);
-        
-        true_cluster_boundary = [[mid_results ones(size(mid_results,1),1)];ones(1,size(FrictionGrid_ref.boundary,2))] ;
-        
-        true_cluster_boundary(:,1)=1;
-        true_cluster_boundary(1,:)=1;
-        true_cluster_boundary(true_cluster_boundary==0)=1;
-        
-        
-        %%  find critical_boundary = [ind_x,ind_y,]
-        
-        friction_diff_col = [zeros(1,size(FrictionGrid_ref.friction,2)) ; abs(diff(FrictionGrid_ref.friction,1,1))]; %columns 
-        
-        friction_diff_row = [zeros(size(FrictionGrid_ref.friction,1),1) abs(diff(FrictionGrid_ref.friction,1,2))];
-        
-        critical_boundary = friction_diff_col + friction_diff_row;
-        critical_boundary(critical_boundary<0.1) = 0;
-%         critical_boundary(critical_boundary>=0.1) = 1;
-        
-        
-        critical_boundary_true_position(:,1) = FrictionGrid_ref.position_s(logical(critical_boundary));
-        critical_boundary_true_position(:,2) = FrictionGrid_ref.position_t(logical(critical_boundary));
-        
-        critical_boundary(critical_boundary==0) = NaN;
-        
-        h_fig = figure(44774);
-        set(h_fig,'Name','cluster results image');
-        
-        width=540;%
-        height=300;%
-        right=100;%
-        bottom=400;%
-        set(gcf,'position',[right,bottom,width,height])
-        clf
-        image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-            [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-            FrictionGrid_ref.friction,'CDataMapping','scaled')
-        hold on
-        s = surf(FrictionGrid_ref.position_s,FrictionGrid_ref.position_t,critical_boundary,'EdgeColor','r','FaceColor','none'); %,'FaceAlpha',0.1
-        
-        index_ref = 39;
-        plot3(FrictionGrid_ref.position_s(index_ref,:),FrictionGrid_ref.position_t(index_ref,:),ones(size(FrictionGrid_ref.position_t(index_ref,:))),'k--','LineWidth',2)
-        index_lane_center_lateral=[20 58];
-        for i= 1:length(index_lane_center_lateral)
-            plot3(FrictionGrid_ref.position_s(index_lane_center_lateral(i),:),FrictionGrid_ref.position_t(index_lane_center_lateral(i),:),ones(size(FrictionGrid_ref.position_t(index_lane_center_lateral(i),:))),'k-.','LineWidth',1)
-        end
-        
-%         scatter3(critical_boundary_true_position(:,1),critical_boundary_true_position(:,2),ones(size(critical_boundary_true_position(:,2))),'go');
-        
-        set(gca,'YDir','normal')
-        colormap parula
-        colorbar
-        % shading interp
-        shading flat
-        lighting phong
-        view(0,90)
-        zlim([0 1])
-        caxis([0.1,0.9])
-        s.EdgeColor = 'k';
-        s.LineWidth = 3;
-        % axis equal
-        box on
-        xlabel('Station[m]')
-        ylabel('Transverse[m]')
-        axes_handle = gca;
-        set(axes_handle, 'FontName', 'Times New Roman', 'FontSize', Axis_label_FontSize+3);
-        
-        %%
-        figure(44473)
-        %     imshow(label2rgb(L))
-        clf
-        %     Label_matrix(Label_matrix==1) =NaN;
-        image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-            [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-            Label_matrix,'CDataMapping','scaled')
-        %     clf
-        %     im = image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-        %         [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-        %         labeloverlay(FrictionGrid_ref.friction,boundary,'Transparency',0));
-        %
-        figure(44474)
-        %     imshow(label2rgb(L))
-        clf
-        surf(FrictionGrid_ref.position_s,FrictionGrid_ref.position_t,Label_matrix);
-        hold on
-        index_ref = 39;
-        plot3(FrictionGrid_ref.position_s(index_ref,:),FrictionGrid_ref.position_t(index_ref,:),ones(size(FrictionGrid_ref.position_t(index_ref,:))),'k--','LineWidth',2)
-        index_lane_center_lateral=[20 58];
-        for i= 1:length(index_lane_center_lateral)
-            plot3(FrictionGrid_ref.position_s(index_lane_center_lateral(i),:),FrictionGrid_ref.position_t(index_lane_center_lateral(i),:),ones(size(FrictionGrid_ref.position_t(index_lane_center_lateral(i),:))),'k-.','LineWidth',1)
-        end
-        % axis tight
-        % grid on
-        colormap parula
-        colorbar
-        % shading interp
-        shading flat
-        lighting phong
-        view(0,90)
-        zlim([0 1])
-        caxis([0.1,0.9])
-        % axis equal
-        box on
-        xlabel('station [m]')
-        ylabel('traversal [m]')
-        zlabel('friction\_coeficient')
-        
-        figure(44482) % original and cluster data
-        clf
-        surf(FrictionGrid_ref.position_s,FrictionGrid_ref.position_t,Label_matrix);
-        %     scatter3(reshape(FrictionGrid_measure.position_s,[],1),reshape(FrictionGrid_measure.position_t,[],1),reshape(FrictionGrid_measure.friction_mean_fillmiss,[],1),10,reshape(FrictionGrid_measure.friction_mean_fillmiss,[],1),'.');
-        hold on
-       
-        scatter3(reshape(FrictionGrid_ref.position_s,[],1),reshape(FrictionGrid_ref.position_t,[],1),reshape(FrictionGrid_ref.boundary,[],1),20,reshape(FrictionGrid_ref.boundary,[],1),'r.');
-        shading flat
-        view(0,90)
-        zlim([0 1])
-        colorbar
-        caxis([0.1,0.9])
-        %     xlim([-5 500])
-        xlabel('s[m]')
-        ylabel('t[m]')
-        box on
-        nbs_boundariy_grid = length(find(FrictionGrid_ref.boundary ==1))
-        
-        sub_cluster_label = ones(size(FrictionGrid_ref.friction));
-        sub_cluster_label(FrictionGrid_ref.boundary ==1) = 0;
-        [~,nbs_subcluster] = bwlabel(sub_cluster_label,4)
-        
-        %% step 3: split each sub_cluster into regular rectangular
-        
-        sub_cluster_label = zeros(size(Label_matrix));
-        friction_cluster = unique(Label_matrix);
-        nbs_subcluster = length(friction_cluster);
-        for i=1:nbs_subcluster
-            sub_cluster_label(Label_matrix==friction_cluster(i))=i;
-        end
-        % sub_cluster_label(sub_cluster_label==3)=1;
-        %
-        rect_row = []; % create a recttangular list for each row
-        
-        for i_cluster=1:nbs_subcluster
-            
-            [cluster_row,cluster_col] = find(sub_cluster_label == i_cluster);
-            
-            ind_cluster_row = unique(cluster_row); % the number of rows in the cluster
-            
-            % find the connected rectangular block in each row
-            for i_row = 1:length(ind_cluster_row)
-                cluster_cols_irow = sort(cluster_col(cluster_row==ind_cluster_row(i_row))); % start from the first row
-                ind_edge = find(diff(cluster_cols_irow)>1);
-                ind_edges = [0 ind_edge length(cluster_cols_irow)];
-                for i_edge= 1:length(ind_edges)-1
-                    rect_row = [rect_row; [ind_cluster_row(i_row) cluster_cols_irow(ind_edges(i_edge)+1) ind_cluster_row(i_row) cluster_cols_irow(ind_edges(i_edge+1)) ...
-                        friction_cluster(i_cluster) 1*(cluster_cols_irow(ind_edges(i_edge+1))-cluster_cols_irow(ind_edges(i_edge)+1)+1)]]; % rectangular of each row
-                end
-            end
-            
-            % merge the rectangular blocks in each row
-            
-            rect_current = rect_row(rect_row(:,1)==ind_cluster_row(1),:);
-            %         rectCounter = size(rect_row,1);
-            rect_merge=[];
-            for i_row = 2:length(ind_cluster_row)
-                
-                rect_irow_next = rect_row(rect_row(:,1)==ind_cluster_row(i_row),:);
-                
-                for i = 1: size(rect_current,1)
-                    for j = 1: size(rect_irow_next,1)
-                        
-                        if (rect_current(i,2)==rect_irow_next(j,2)) && (rect_current(i,4)==rect_irow_next(j,4))&& (rect_current(i,1)==rect_irow_next(j,3)-1)
-                            
-                            rect_merge = [rect_merge;[rect_irow_next(j,1) rect_irow_next(j,2) rect_current(i,3) rect_current(i,4) ...
-                                rect_current(i,5) rect_current(i,6)+rect_irow_next(j,6)]];
-                            rect_irow_next(j,:)= [NaN NaN NaN NaN NaN NaN]; % remove original
-                            rect_current(i,:)= [NaN NaN NaN NaN NaN NaN]; % remove original
-                        end
-                        
-                    end
-                end
-                rect_current = [rect_merge;rect_current ;rect_irow_next];
-                rect_current(all(isnan(rect_current),2),:) = [];
-                rect_merge = [];
-                
-            end
-            
-        end
-        rect_list=rect_current;
-        nbs_rect = length(rect_list)
-        % lower left corner,width , height.
-        rect_list(:,3) = rect_current(:,4)-rect_current(:,2);
-        rect_list(:,4) = rect_current(:,1)-rect_current(:,3);
-        %% Plot the rectangles
-        figure(55582)
-        
-        clf
-        image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-            [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-            flipud(Label_matrix),'CDataMapping','scaled')
-        set(gca,'YDir','normal')
-        for i = 1:size(rect_list,1)
-            rectangle('position',[FrictionGrid_ref.position_s(1,rect_list(i,2))-0.05 FrictionGrid_ref.position_t(rect_list(i,1),1)-0.05 0.1*rect_list(i,3:4)+[0.1 0.1]],'EdgeColor','r','LineWidth',2);
-        end
-        
-        box on
-        caxis([0.1,0.9])
-        
-        figure(55583)
-        colors = parula(100);
-        cmap = [(linspace(0.1,0.9,100))' colors];
-        for i = 1:size(rect_list,1)
-            p = rectangle('position',[FrictionGrid_ref.position_s(1,rect_list(i,2))-0.05 FrictionGrid_ref.position_t(rect_list(i,1),1)-0.05 0.1*rect_list(i,3:4)+[0.1 0.1]]);
-            set(p,'edgecolor',[0.5 0.5 0.5],'linewidth',2,'facecolor',interp1(cmap(:,1),cmap(:,2:4),rect_list(i,5)));
-        end
-        
-        colormap(colors);
-        colorbar;
-        
-        caxis([0.1,0.9])
-        
+    
+    %     nbs_cluster = 3;
+    %     nbs_friction_grid = 5;
+    lower_friction_bound = min(FrictionGrid_ref.friction,[],'all');
+    upper_friction_bound = max(FrictionGrid_ref.friction,[],'all');
+    friction_interval = 0.1
+    nbs_friction_grid = round((upper_friction_bound-lower_friction_bound)/friction_interval);
+    %     [counts,edges] = histcounts(FrictionGrid_ref.friction,...
+    %         nbs_friction_grid,'BinLimits',[lower_friction_bound,upper_friction_bound]); % Calculate a 101-bin histogram for the image.
+    [counts,edges] = histcounts(FrictionGrid_ref.friction,...
+        round(1/friction_interval),'BinLimits',[0,1.0],'Normalization', 'probability' ); % Calculate a 101-bin histogram for the image.
+    
+    % histtogram of friction data
+    h_fig = figure(15567);
+    set(h_fig,'Name','histogram of friction data');
+    histogram(reshape(FrictionGrid_ref.friction,[],1),edges)
+    %     stem(edges,counts)
+    
+    % execute the k-means cluster
+    nbs_cluster = length(counts(counts>0.01))+1;
+    
+    data = [reshape(FrictionGrid_ref.position_s,[],1)/max(FrictionGrid_ref.position_s(1,:)),...
+        0.5+reshape(FrictionGrid_ref.position_t,[],1)/(2*max(FrictionGrid_ref.position_t(1,:))),...
+        30*reshape(FrictionGrid_ref.friction,[],1)];
+    [cluster_idx,cluster_centroid_locations,sumDist] = kmeans(data,nbs_cluster,'Replicates',3,...
+        'Distance','cityblock','Display','final'); % sqeuclidean,  cityblock
+    figure(5559)
+    clf
+    hold on
+    box on
+    grid on
+    view(0,90)
+    zlim([0 1])
+    %     xlim([-5 500])
+    xlabel('s[m]')
+    ylabel('t[m]')
+    for i_cluster=1:nbs_cluster
+        cluster_index = find(cluster_idx == i_cluster);
+        scatter3(FrictionGrid_ref.position_s(cluster_index),FrictionGrid_ref.position_t(cluster_index),FrictionGrid_ref.friction(cluster_index),10,'.');
     end
     
+    % step 1 : find the super pixel using the k-means cluster results
+    Label_matrix = zeros(size(FrictionGrid_ref.friction)); % cluster matrix
+    for i_cluster=1:nbs_cluster
+        
+        cluster_index = find(cluster_idx == i_cluster);
+        %         [cluster_sub_row,cluster_sub_col] = ind2sub(size(FrictionGrid_ref.friction),cluster_index); % cluster matrix subscripts
+        
+        cluster_friction = mean(FrictionGrid_ref.friction(cluster_index),'all'); %value of each cluster
+        
+        Label_matrix(cluster_index) = cluster_friction; % assign values to each cluster
+        
+        sub_cluster = zeros(size(FrictionGrid_ref.friction));
+        sub_cluster(cluster_index) = Label_matrix(cluster_index);
+        [L,n] = bwlabel(sub_cluster,4);
+        for i=1:n
+            index_subcluster = find(L==i);
+            if length(index_subcluster)<50 % find samll sub cluster
+                Label_matrix(index_subcluster) = NaN;
+            end
+        end
+        
+    end
+    % fill the samll holes uing nearest data
+    Label_matrix = fillmissing(Label_matrix,'nearest',2,'EndValues','nearest'); % by column
     
     
+    %%step 2 : find the boundaries using the boundarymask functon
+    Label_matrix(Label_matrix==0) =1;
+    Label_matrix_pad = padarray(Label_matrix,[1 1],0,'both');
+    
+    boundary_pad = boundarymask(Label_matrix_pad);
+    %     boundary_pad = edge(Label_matrix_pad,'Canny',0.002);
+    
+    FrictionGrid_ref.boundary = double(boundary_pad(2:end-1,2:end-1));
+    FrictionGrid_ref.boundary(FrictionGrid_ref.boundary==0)= NaN;
+    %%
+    
+    mid_results = diff(diff(FrictionGrid_ref.boundary,1,1),1,2);
+    
+    true_cluster_boundary = [[mid_results ones(size(mid_results,1),1)];ones(1,size(FrictionGrid_ref.boundary,2))] ;
+    
+    true_cluster_boundary(:,1)=1;
+    true_cluster_boundary(1,:)=1;
+    true_cluster_boundary(true_cluster_boundary==0)=1;
+    
+    
+    %%  find critical_boundary = [ind_x,ind_y,]
+    
+    friction_diff_col = [zeros(1,size(FrictionGrid_ref.friction,2)) ; abs(diff(FrictionGrid_ref.friction,1,1))]; %columns
+    
+    friction_diff_row = [zeros(size(FrictionGrid_ref.friction,1),1) abs(diff(FrictionGrid_ref.friction,1,2))];
+    
+    critical_boundary = friction_diff_col + friction_diff_row;
+    critical_boundary(critical_boundary<0.1) = 0;
+    %         critical_boundary(critical_boundary>=0.1) = 1;
+    
+    
+    critical_boundary_true_position(:,1) = FrictionGrid_ref.position_s(logical(critical_boundary));
+    critical_boundary_true_position(:,2) = FrictionGrid_ref.position_t(logical(critical_boundary));
+    
+    critical_boundary(critical_boundary==0) = NaN;
+    
+    h_fig = figure(44774);
+    set(h_fig,'Name','cluster results image');
+    
+    width=540;%
+    height=300;%
+    right=100;%
+    bottom=400;%
+    set(gcf,'position',[right,bottom,width,height])
+    clf
+    image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
+        [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
+        FrictionGrid_ref.friction,'CDataMapping','scaled')
+    hold on
+    s = surf(FrictionGrid_ref.position_s,FrictionGrid_ref.position_t,critical_boundary,'EdgeColor','r','FaceColor','none'); %,'FaceAlpha',0.1
+    
+    index_ref = 39;
+    plot3(FrictionGrid_ref.position_s(index_ref,:),FrictionGrid_ref.position_t(index_ref,:),ones(size(FrictionGrid_ref.position_t(index_ref,:))),'k--','LineWidth',2)
+    index_lane_center_lateral=[20 58];
+    for i= 1:length(index_lane_center_lateral)
+        plot3(FrictionGrid_ref.position_s(index_lane_center_lateral(i),:),FrictionGrid_ref.position_t(index_lane_center_lateral(i),:),ones(size(FrictionGrid_ref.position_t(index_lane_center_lateral(i),:))),'k-.','LineWidth',1)
+    end
+    
+    %         scatter3(critical_boundary_true_position(:,1),critical_boundary_true_position(:,2),ones(size(critical_boundary_true_position(:,2))),'go');
+    
+    set(gca,'YDir','normal')
+    colormap parula
+    colorbar
+    % shading interp
+    shading flat
+    lighting phong
+    view(0,90)
+    zlim([0 1])
+    caxis([0.1,0.9])
+    s.EdgeColor = 'k';
+    s.LineWidth = 3;
+    % axis equal
+    box on
+    xlabel('Station[m]')
+    ylabel('Transverse[m]')
+    axes_handle = gca;
+    set(axes_handle, 'FontName', 'Times New Roman', 'FontSize', Axis_label_FontSize+3);
     
     %%
-    flag_cluster_check =0;
-    if flag_cluster_check
+    figure(44473)
+    clf
+    %     Label_matrix(Label_matrix==1) =NaN;
+    image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
+        [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
+        Label_matrix,'CDataMapping','scaled')
+    %
+    figure(44474)
+    clf
+    surf(FrictionGrid_ref.position_s,FrictionGrid_ref.position_t,Label_matrix);
+    hold on
+    index_ref = 39;
+    plot3(FrictionGrid_ref.position_s(index_ref,:),FrictionGrid_ref.position_t(index_ref,:),ones(size(FrictionGrid_ref.position_t(index_ref,:))),'k--','LineWidth',2)
+    index_lane_center_lateral=[20 58];
+    for i= 1:length(index_lane_center_lateral)
+        plot3(FrictionGrid_ref.position_s(index_lane_center_lateral(i),:),FrictionGrid_ref.position_t(index_lane_center_lateral(i),:),ones(size(FrictionGrid_ref.position_t(index_lane_center_lateral(i),:))),'k-.','LineWidth',1)
+    end
+    % axis tight
+    % grid on
+    colormap parula
+    colorbar
+    % shading interp
+    shading flat
+    lighting phong
+    view(0,90)
+    zlim([0 1])
+    caxis([0.1,0.9])
+    % axis equal
+    box on
+    xlabel('station [m]')
+    ylabel('traversal [m]')
+    zlabel('friction\_coeficient')
+    
+    figure(44482) % original and cluster data
+    clf
+    surf(FrictionGrid_ref.position_s,FrictionGrid_ref.position_t,Label_matrix);
+    %     scatter3(reshape(FrictionGrid_measure.position_s,[],1),reshape(FrictionGrid_measure.position_t,[],1),reshape(FrictionGrid_measure.friction_mean_fillmiss,[],1),10,reshape(FrictionGrid_measure.friction_mean_fillmiss,[],1),'.');
+    hold on
+    
+    scatter3(reshape(FrictionGrid_ref.position_s,[],1),reshape(FrictionGrid_ref.position_t,[],1),reshape(FrictionGrid_ref.boundary,[],1),20,reshape(FrictionGrid_ref.boundary,[],1),'r.');
+    shading flat
+    view(0,90)
+    zlim([0 1])
+    colorbar
+    caxis([0.1,0.9])
+    %     xlim([-5 500])
+    xlabel('s[m]')
+    ylabel('t[m]')
+    box on
+    nbs_boundariy_grid = length(find(FrictionGrid_ref.boundary ==1))
+    
+    sub_cluster_label = ones(size(FrictionGrid_ref.friction));
+    sub_cluster_label(FrictionGrid_ref.boundary ==1) = 0;
+    [~,nbs_subcluster] = bwlabel(sub_cluster_label,4)
+    
+    % 3: split each sub_cluster into regular rectangular
+    
+    sub_cluster_label = zeros(size(Label_matrix));
+    friction_cluster = unique(Label_matrix);
+    nbs_subcluster = length(friction_cluster);
+    for i=1:nbs_subcluster
+        sub_cluster_label(Label_matrix==friction_cluster(i))=i;
+    end
+    % sub_cluster_label(sub_cluster_label==3)=1;
+    %
+    rect_row = []; % create a recttangular list for each row
+    
+    for i_cluster=1:nbs_subcluster
         
+        [cluster_row,cluster_col] = find(sub_cluster_label == i_cluster);
         
-        % elbow of cluster
-        %     h_fig = figure(17265);
-        %     set(h_fig,'Name','elbow');
-        %     hold on
-        %     Total_sumDist = zeros(10,1);
-        %     for i=1:10
-        %         [~,~,sumDist] = kmeans(rictionGrid_ref.friction_vector,i,'Replicates',1,'Display','final');
-        %         Total_sumDist(i) = sum(sumDist);
-        %     end
-        %     plot((1:10),Total_sumDist,'o-','Color','b')
-        %     grid on
-        %     xlabel('Number of clusters')
-        %     ylabel('Total sum of distance')
+        ind_cluster_row = unique(cluster_row); % the number of rows in the cluster
         
-        %%original data and cluster data
-        %     h_fig = figure(9849);
-        %     set(h_fig,'Name','friction cluster');
-        %     clf;
-        %     hold on
-        %     % true friction
-        %      scatter3(FrictionGrid_ref.position_x_vector,FrictionGrid_ref.position_y_vector,FrictionGrid_ref.friction_vector,10, FrictionGrid_ref.friction_vector,'.');
-        %     % plot(friction_grid(1:1:end,1),friction_grid(1:1:end,2),'g.','MarkerSize',10)
-        %     for i_cluster =1:nbs_cluster
-        %         %plot(friction_grid(idx==1,1),friction_grid(idx==1,2),'r.','MarkerSize',10)
-        %         cluster_index = find(cluster_idx == i_cluster);
-        %         cluster_grid = [FrictionGrid_ref.position_x_vector(cluster_index) FrictionGrid_ref.position_y_vector(cluster_index)];
-        %         cluster_friction = FrictionGrid_ref.friction_vector(cluster_index);
-        %         scatter3(cluster_grid(:,1),cluster_grid(:,2),cluster_friction,'r.');
-        %     end
-        %    %legend('Ture Road Friction Distribution', 'Estimated Road Friction Distribution')
-        %     grid on
-        %     xlabel('xEast [m]')
-        %     ylabel('yNorth [m]')
-        %     zlabel('friction\_coeficient')
-        %     %axis equal
-        %     view(0,90)
-        %     zlim([0 1])
-        %     colormap(jet); % used for ACC paper
-        %     colormap(parula);% used for IVSG friction reprsentation,  parula
-        %     %     colormap(prism);%
-        %     colorbar
+        % find the connected rectangular block in each row
+        for i_row = 1:length(ind_cluster_row)
+            cluster_cols_irow = sort(cluster_col(cluster_row==ind_cluster_row(i_row))); % start from the first row
+            ind_edge = find(diff(cluster_cols_irow)>1);
+            ind_edges = [0 ind_edge length(cluster_cols_irow)];
+            for i_edge= 1:length(ind_edges)-1
+                rect_row = [rect_row; [ind_cluster_row(i_row) cluster_cols_irow(ind_edges(i_edge)+1) ind_cluster_row(i_row) cluster_cols_irow(ind_edges(i_edge+1)) ...
+                    friction_cluster(i_cluster) 1*(cluster_cols_irow(ind_edges(i_edge+1))-cluster_cols_irow(ind_edges(i_edge)+1)+1)]]; % rectangular of each row
+            end
+        end
+        
+        % merge the rectangular blocks in each row
+        
+        rect_current = rect_row(rect_row(:,1)==ind_cluster_row(1),:);
+        %         rectCounter = size(rect_row,1);
+        rect_merge=[];
+        for i_row = 2:length(ind_cluster_row)
+            
+            rect_irow_next = rect_row(rect_row(:,1)==ind_cluster_row(i_row),:);
+            
+            for i = 1: size(rect_current,1)
+                for j = 1: size(rect_irow_next,1)
+                    
+                    if (rect_current(i,2)==rect_irow_next(j,2)) && (rect_current(i,4)==rect_irow_next(j,4))&& (rect_current(i,1)==rect_irow_next(j,3)-1)
+                        
+                        rect_merge = [rect_merge;[rect_irow_next(j,1) rect_irow_next(j,2) rect_current(i,3) rect_current(i,4) ...
+                            rect_current(i,5) rect_current(i,6)+rect_irow_next(j,6)]];
+                        rect_irow_next(j,:)= [NaN NaN NaN NaN NaN NaN]; % remove original
+                        rect_current(i,:)= [NaN NaN NaN NaN NaN NaN]; % remove original
+                    end
+                    
+                end
+            end
+            rect_current = [rect_merge;rect_current ;rect_irow_next];
+            rect_current(all(isnan(rect_current),2),:) = [];
+            rect_merge = [];
+            
+        end
+        
+    end
+    rect_list=rect_current;
+    nbs_rect = length(rect_list)
+    % lower left corner,width , height.
+    rect_list(:,3) = rect_current(:,4)-rect_current(:,2);
+    rect_list(:,4) = rect_current(:,1)-rect_current(:,3);
+    %%Plot the rectangles
+    figure(55582)
+    
+    clf
+    image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
+        [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
+        flipud(Label_matrix),'CDataMapping','scaled')
+    set(gca,'YDir','normal')
+    for i = 1:size(rect_list,1)
+        rectangle('position',[FrictionGrid_ref.position_s(1,rect_list(i,2))-0.05 FrictionGrid_ref.position_t(rect_list(i,1),1)-0.05 0.1*rect_list(i,3:4)+[0.1 0.1]],'EdgeColor','r','LineWidth',2);
     end
     
+    box on
+    caxis([0.1,0.9])
+    
+    figure(55583)
+    colors = parula(100);
+    cmap = [(linspace(0.1,0.9,100))' colors];
+    for i = 1:size(rect_list,1)
+        p = rectangle('position',[FrictionGrid_ref.position_s(1,rect_list(i,2))-0.05 FrictionGrid_ref.position_t(rect_list(i,1),1)-0.05 0.1*rect_list(i,3:4)+[0.1 0.1]]);
+        set(p,'edgecolor',[0.5 0.5 0.5],'linewidth',2,'facecolor',interp1(cmap(:,1),cmap(:,2:4),rect_list(i,5)));
+    end
+    
+    colormap(colors);
+    colorbar;
+    
+    caxis([0.1,0.9])
+    
 end
-%% step 5: aggregate the measurememt data to friction grid
+
+
+%% ======== Section 4: aggregate the measurememt data to friction grid =====
 
 % initialize aggregated data
 FrictionGrid_measure.position_x = FrictionGrid_ref.position_x;
@@ -802,7 +660,7 @@ FrictionGrid_measure.friction_std = NaN(size(FrictionGrid_measure.position_x)); 
 FrictionGrid_measure.friction_confidenceInterval_upper = NaN(size(FrictionGrid_measure.position_x)); % friction_confidenceInterval_upper of mean value of noisy measurement at each grid
 FrictionGrid_measure.friction_confidenceInterval_lower = NaN(size(FrictionGrid_measure.position_x)); % friction_confidenceInterval_lower of mean value of noisy measurement at each grid
 
-%% step 4.1 find the neasrest grid
+%%step 4.1 find the neasrest grid
 road_grid = [reshape(FrictionGrid_ref.position_x,[],1), reshape(FrictionGrid_ref.position_y,[],1)];
 % friction_coefficient_true = FrictionGrid_ref.friction_vector;
 Md_road_grid = KDTreeSearcher(road_grid); % build KDTreeSearcher model for all lane grid data
@@ -849,7 +707,7 @@ for i_grid = 1:length(measurement_grid_id)
 end
 toc
 %
-Signal_noise_ratio = 10; %unit: dB
+Signal_noise_ratio = 10; %to friction measurement, unit: dB
 % measurement_grid_nbs(measurement_grid_nbs>500) = 500; % normalization
 FrictionGrid_measure.friction_nbs(measurement_grid_id) = measurement_grid_nbs;
 FrictionGrid_measure.friction_mean(measurement_grid_id) = measurement_grid_friction_mean;
@@ -867,16 +725,16 @@ FrictionGrid_measure.friction_confidenceInterval_fillmiss = fillmissing(Friction
 % combine to get the grid which are measured,[id, coordinates, measured friction values]
 
 % measurement_grid = [measurement_grid_id,road_grid(measurement_grid_id,:),measurement_grid_friction_mean,measurement_grid_nbs]; % road grid coordinate which are measaured by the vehicle
-%%
-figure(23)
-clf
-histogram(measurement_grid_nbs)
-
-figure(24)
-clf
-plot(measurement_grid_nbs,'b.');
-
-%% surf plot
+if flag.doDebug
+    figure(23)
+    clf
+    histogram(measurement_grid_nbs)
+    
+    figure(24)
+    clf
+    plot(measurement_grid_nbs,'b.');
+end
+%%surf plot
 h_fig = figure(25);
 set(h_fig,'Name','the number of raw data in each grid cell');
 width=540;%
@@ -896,10 +754,6 @@ for i= 1:length(index_lane_center_lateral)
     plot3(FrictionGrid_ref.position_s(index_lane_center_lateral(i),:),FrictionGrid_ref.position_t(index_lane_center_lateral(i),:),...
         ones(size(FrictionGrid_ref.position_t(index_lane_center_lateral(i),:))),'w-.','LineWidth',1.5)
 end
-% legend('Number of Measurement Points','True Friction Boundary')
-% axis tight
-% % grid on
-
 cMap = parula(256);
 dataMax = 500;
 dataMin = 0;
@@ -914,17 +768,10 @@ x = scalingIntensity * x/max(abs(x));
 x = (x).* exp(1.5*abs(x));
 x = x - min(x);
 x = x*511/max(x)+1;
-% figure(1111)
-% plot(x)
-
 newMap = interp1(x, cMap, 1:512);
 
-% colormap hot
-% colormap cool
-% colormap parula
 colormap(newMap)
 caxis([0,500])
-% colormap(mymap)
 colorbar
 
 % shading interp
@@ -941,65 +788,8 @@ box on
 axes_handle = gca;
 set(axes_handle, 'FontName', 'Times New Roman', 'FontSize', Axis_label_FontSize+2);
 
-%
-if flag.doDebug
-    figure(251)
-    clf
-    surf(FrictionGrid_measure.position_s,FrictionGrid_measure.position_t,1000000*FrictionGrid_measure.friction_nbs/length(Id_grid_measure),1000000*FrictionGrid_measure.friction_nbs/length(Id_grid_measure))
-    hold on
-    % scatter3(FrictionGrid_ref.position_x_trans(boundary_index),FrictionGrid_ref.position_y_trans(boundary_index),FrictionGrid_ref.friction_trans(boundary_index),'r.');
-    index_ref = 39;
-    plot3(FrictionGrid_ref.position_s(index_ref,:),FrictionGrid_ref.position_t(index_ref,:),...
-        ones(size(FrictionGrid_ref.position_t(index_ref,:))),'w--','LineWidth',2)
-    index_lane_center_lateral=[20 58];
-    for i= 1:length(index_lane_center_lateral)
-        plot3(FrictionGrid_ref.position_s(index_lane_center_lateral(i),:),FrictionGrid_ref.position_t(index_lane_center_lateral(i),:),...
-            ones(size(FrictionGrid_ref.position_t(index_lane_center_lateral(i),:))),'w-.','LineWidth',1.5)
-    end
-    % legend('Number of Measurement Points','True Friction Boundary')
-    % axis tight
-    % % grid on
-    
-    cMap = parula(256);
-    dataMax = 200;
-    dataMin = 0;
-    centerPoint = 20;
-    scalingIntensity = 5;
-    % perform some operations to create your colormap
-    x = 1:length(cMap);
-    x = x - (centerPoint-dataMin)*length(x)/(dataMax-dataMin);
-    x = scalingIntensity * x/max(abs(x));
-    
-    % x = sign(x).* exp(1.2*abs(x));
-    x = (x).* exp(1.5*abs(x));
-    x = x - min(x);
-    x = x*511/max(x)+1;
-    % figure(1111)
-    % plot(x)
-    
-    newMap = interp1(x, cMap, 1:512);
-    
-    % colormap hot
-    % colormap cool
-    % colormap parula
-    colormap(newMap)
-    caxis([0,200])
-    colorbar
-    
-    % shading interp
-    shading flat
-    lighting phong
-    view(0,90)
-    % zlim([0 100])
-    xlim([-1,500])
-    xlabel('station[m]','interpreter','latex','fontsize',14);
-    ylabel('traversal[m]','interpreter','latex','fontsize',14);
-    zlabel('millionth','interpreter','latex','fontsize',14);
-    % legend('$steering$','location','best','interpreter','latex','fontsize',14);
-    box on
-end
 %%
-
+if flag.doDebug
 h_fig = figure(984727);
 set(h_fig,'Name','the mean friction coefficient value in each grid cell');
 width=540;%
@@ -1043,14 +833,7 @@ set(axes_handle, 'FontName', 'Times New Roman', 'FontSize', Axis_label_FontSize+
 
 zlabel('friction\_coeficient')
 
-% % empty dark
-%  FrictionGrid_measure.empty = ones(size(FrictionGrid_measure.friction_mean));
-%  FrictionGrid_measure.empty(isnan(FrictionGrid_measure.friction_mean)) = 0;
-% %  [row,col]= find(FrictionGrid_measure.empty == 0);
-% %  FrictionGrid_measure.empty(row+1,col+1) =0; 
-%  surf(FrictionGrid_measure.position_s,FrictionGrid_measure.position_t,FrictionGrid_measure.empty,...
-%      'EdgeColor','none','FaceColor','k');
-
+end 
 %%
 h_fig = figure(984728);
 set(h_fig,'Name','the mean friction coefficient value in each grid cell');
@@ -1074,8 +857,6 @@ index_lane_center_lateral=[20 58];
 for i= 1:length(index_lane_center_lateral)
     plot3(FrictionGrid_ref.position_s(index_lane_center_lateral(i),:),FrictionGrid_ref.position_t(index_lane_center_lateral(i),:),ones(size(FrictionGrid_ref.position_t(index_lane_center_lateral(i),:))),'k-.','LineWidth',1)
 end
-% axis tight
-% grid on
 pMap = parula;
 myMap = [0.65 0.65 0.65; pMap]; % use gray color for empty value
 
@@ -1104,16 +885,8 @@ set(axes_handle, 'FontName', 'Times New Roman', 'FontSize', Axis_label_FontSize+
 
 zlabel('friction\_coeficient')
 
-%  FrictionGrid_measure.empty = NaN(size(FrictionGrid_measure.friction_mean));
-%  FrictionGrid_measure.empty(isnan(FrictionGrid_measure.friction_mean)) = 0;
-%  find(FrictionGrid_measure.empty == 0);
-%  surf(FrictionGrid_measure.position_s,FrictionGrid_measure.position_t,FrictionGrid_measure.empty,...
-%      'EdgeColor','none','FaceColor',[0.5 0.5 0.5]);
+ saveas(h_fig,'Images\friction_measurement_mean.svg')
 
-% im= image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-%     [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-%     FrictionGrid_measure.empty,'CDataMapping','scaled');
-% im.AlphaData = 0.1;
 %%
 h_fig = figure(26);
 set(h_fig,'Name','the confidence interval value in each grid cell');
@@ -1127,10 +900,8 @@ set(h_fig,'Name','the confidence interval value in each grid cell');
     for i= 1:length(index_lane_center_lateral)
         plot3(FrictionGrid_ref.position_s(index_lane_center_lateral(i),:),FrictionGrid_ref.position_t(index_lane_center_lateral(i),:),ones(size(FrictionGrid_ref.position_t(index_lane_center_lateral(i),:))),'k-.','LineWidth',1)
     end
-    % legend('Magnitude of 95% confidence Interval','True Friction Boundary')
-    % axis tight
+
     cMap = parula(256);
-    % cMap = gray(256);
     dataMax = 0.5;
     dataMin = 0;
     centerPoint = 0.05;
@@ -1139,14 +910,10 @@ set(h_fig,'Name','the confidence interval value in each grid cell');
     x = 1:length(cMap);
     x = x - (centerPoint-dataMin)*length(x)/(dataMax-dataMin);
     x = scalingIntensity * x/max(abs(x));
-    
-    % x = sign(x).* exp(1.2*abs(x));
+
     x = (x).* exp(4*abs(x));
     x = x - min(x);
     x = x*511/max(x)+1;
-    % figure(1111)
-    % plot(x)
-    
     newMap = interp1(x, cMap, 1:512);
     
     colormap(newMap)
@@ -1164,12 +931,11 @@ set(h_fig,'Name','the confidence interval value in each grid cell');
     % axis equal
     box on
     
-%%
-if flag.doDebug
+     saveas(h_fig,'Images\friction_measurement_confidence_interval.svg')
     
+if flag.doDebug % comapre the true friction and aggregated measured results
     
     %%plot the true friction and aggregated measured results
-    
     % scatter plot
     h_fig = figure(9845);
     set(h_fig,'Name','true friction and measurement average');
@@ -1184,21 +950,12 @@ if flag.doDebug
     % s = surf(FrictionGrid_ref.position_x,FrictionGrid_ref.position_y,FrictionGrid_ref.friction,'FaceColor' ,'none')
     % s.FaceColor = 'none';
     hold on
-    
-    % axis tight
-    % grid on
-    
-    % shading flat
-    % lighting phong
-    
     % measurement
     scatter3(FrictionGrid_measure.position_x(1:end),FrictionGrid_measure.position_y(1:end),FrictionGrid_measure.friction_mean(1:end),10, FrictionGrid_measure.friction_mean(1:end),'.');
-    
-    % scatter3(measurement_grid(:,2),measurement_grid(:,3),measurement_grid(:,4),10, measurement_grid(:,4),'*' )
     colormap(jet);% used for IVSG friction reprsentation,  parula
     colormap(parula);% used for IVSG friction reprsentation,  parula
     colorbar
-    %legend('Ture Road Friction Distribution', 'Estimated Road Friction Distribution')
+
     grid on
     xlabel('xEast [m]')
     ylabel('yNorth [m]')
@@ -1290,277 +1047,7 @@ if flag.doDebug
     zlabel('friction\_coeficient')
 end
 
-if flag.doDebug
-    %% STEP5: cluster the noisy friction measurement data
-    
-    % split friction data into groups
-    nbs_friction_grid = 10;
-    [counts,edges] = histcounts(FrictionGrid_measure.friction_mean,nbs_friction_grid,'BinLimits',[0,1]); % Calculate a 101-bin histogram for the image.
-    % execute the k-means cluster
-    nbs_cluster = length(counts(counts>1000));
-    [cluster_idx,cluster_centroid_locations,sumDist] = kmeans(reshape(FrictionGrid_measure.friction_mean,[],1),nbs_cluster,'Replicates',1,'Display','final');
-    
-    % histtogram of friction data
-    h_fig = figure(15566);
-    set(h_fig,'Name','histogram of friction data');
-    histogram(reshape(FrictionGrid_measure.friction_mean,[],1),edges)
-    %stem(edges,counts)
-    %% find boundary of each cluster
-    method_boundary = 2;
-    if method_boundary ==1 % cluster find the boundaries through nearest neighbor
-        threshold = 0.15; %0.145; %meters, the Diagonal length of grid( 0.2 > threshold >0.141)
-        nbs_neighbor = 8 ; % the number of neighbor nodes for each innner grid
-        road_friction_cluster_boundary = [];
-        boundary_index = [];
-        for i_cluster=1:nbs_cluster
-            cluster_index = find(cluster_idx == i_cluster);
-            cluster_grid = [FrictionGrid_ref.position_x(cluster_index) FrictionGrid_ref.position_y(cluster_index)];
-            cluster_friction = FrictionGrid_ref.friction(cluster_index);
-            Md_cluster_grid = KDTreeSearcher(cluster_grid); % Mdl is a KDTreeSearcher model. By default, the distance metric it uses to search for neighbors is Euclidean distance.
-            [~,D] = knnsearch(Md_cluster_grid,cluster_grid,'k',nbs_neighbor+1);
-            %boundary_index = Idx(D(:,nbs_neighbor+1)>threshold,1);
-            cluster_boundary_index = find(D(:,nbs_neighbor+1)>threshold);
-            road_friction_cluster_boundary = vertcat(road_friction_cluster_boundary,[cluster_grid(cluster_boundary_index,:) cluster_friction(cluster_boundary_index)] );
-            boundary_index =  vertcat(boundary_index,cluster_index(cluster_boundary_index));
-            clear D
-            
-            [row,col] = ind2sub(sz,ind)
-        end
-    elseif method_boundary ==2
-        % step 1 : find the super pixel using the k-means cluster results
-        Label_matrix = zeros(size(FrictionGrid_measure.friction_mean)); % cluster matrix
-        for i_cluster=1:nbs_cluster
-            
-            cluster_index = find(cluster_idx == i_cluster);
-            %         [cluster_sub_row,cluster_sub_col] = ind2sub(size(FrictionGrid_ref.friction),cluster_index); % cluster matrix subscripts
-            
-            cluster_friction = mean(FrictionGrid_measure.friction_mean(cluster_index),'all'); %value of each cluster
-            
-            Label_matrix(cluster_index) = cluster_friction; % assign values to each cluster
-            
-        end
-        % step 2 : find the boundaries using the boundarymask functon
-        Label_matrix(Label_matrix==0) =1;
-        Label_matrix_pad = padarray(Label_matrix,[1 1],0,'both');
-        
-        boundary_pad = boundarymask(Label_matrix_pad);
-        boundary = boundary_pad(2:end-1,2:end-1);
-        
-        figure(44471)
-        %     imshow(label2rgb(L))
-        clf
-        Label_matrix(Label_matrix==1) =NaN;
-        image([FrictionGrid_measure.position_s(1,1) FrictionGrid_measure.position_s(1,end)],...
-            [FrictionGrid_measure.position_t(1,1) FrictionGrid_measure.position_t(end,1)],...
-            Label_matrix,'CDataMapping','scaled')
-        %     clf
-        %     im = image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-        %         [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-        %         labeloverlay(FrictionGrid_ref.friction,boundary,'Transparency',0));
-        
-        figure(44472)
-        %     imshow(label2rgb(L))
-        clf
-        surf(FrictionGrid_measure.position_s,FrictionGrid_measure.position_t,Label_matrix);
-        hold on
-        index_ref = 39;
-        plot3(FrictionGrid_ref.position_s(index_ref,:),FrictionGrid_ref.position_t(index_ref,:),ones(size(FrictionGrid_ref.position_t(index_ref,:))),'k--','LineWidth',2)
-        index_lane_center_lateral=[20 58];
-        for i= 1:length(index_lane_center_lateral)
-            plot3(FrictionGrid_ref.position_s(index_lane_center_lateral(i),:),FrictionGrid_ref.position_t(index_lane_center_lateral(i),:),ones(size(FrictionGrid_ref.position_t(index_lane_center_lateral(i),:))),'k-.','LineWidth',1)
-        end
-        % axis tight
-        % grid on
-        colormap parula
-        colorbar
-        % shading interp
-        shading flat
-        lighting phong
-        view(0,90)
-        zlim([0 1])
-        caxis([0.1,0.9])
-        % axis equal
-        box on
-        xlabel('station [m]')
-        ylabel('traversal [m]')
-        zlabel('friction\_coeficient')
-        
-        figure(44481) % original and cluster data
-        clf
-        scatter3(reshape(FrictionGrid_measure.position_s,[],1),reshape(FrictionGrid_measure.position_t,[],1),reshape(FrictionGrid_measure.friction_mean,[],1),10,reshape(FrictionGrid_measure.friction_mean,[],1),'.');
-        hold on
-        FrictionGrid_measure.boundary = double(boundary);
-        FrictionGrid_measure.boundary(FrictionGrid_measure.boundary==0)= NaN;
-        scatter3(reshape(FrictionGrid_measure.position_s,[],1),reshape(FrictionGrid_measure.position_t,[],1),reshape(FrictionGrid_measure.boundary,[],1),20,reshape(FrictionGrid_measure.boundary,[],1),'r.');
-        
-        view(0,90)
-        zlim([0 1])
-        caxis([0.1,0.9])
-        %     xlim([-5 500])
-        xlabel('s[m]')
-        ylabel('t[m]')
-        box on
-        nbs_boundariy_grid = length(find(FrictionGrid_measure.boundary ==1))
-        
-    else
-        [L,N] = superpixels(FrictionGrid_ref.friction,10);
-        
-        mask = boundarymask(L);
-        
-        figure(4447)
-        %     imshow(label2rgb(L))
-        image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-            [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-            L,'CDataMapping','scaled')
-        
-        figure(4448)
-        %     imshow(label2rgb(L))
-        imshow(mask)
-        image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-            [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-            mask,'CDataMapping','scaled')
-        figure(4449)
-        %     im = image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-        %         [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-        %         labeloverlay(FrictionGrid_ref.friction,mask,'Transparency',0));
-        %
-        scatter3(FrictionGrid_ref.position_s,FrictionGrid_ref.position_t,mask,10, mask,'.');
-        
-        hold on
-    end
-    
-    %% STEP5.5: cluster the non-noisy friction measurement data
-    
-    % split friction data into groups
-    nbs_friction_grid = 5;
-    [counts,edges] = histcounts(FrictionGrid_measure.friction_mean_true,nbs_friction_grid,'BinLimits',[0,1]); % Calculate a 101-bin histogram for the image.
-    % execute the k-means cluster
-    nbs_cluster = length(counts(counts>500));
-    [cluster_idx,cluster_centroid_locations,sumDist] = kmeans(reshape(FrictionGrid_measure.friction_mean_true,[],1),nbs_cluster,'Replicates',1,'Display','final');
-    
-    % histtogram of friction data
-    h_fig = figure(15569);
-    set(h_fig,'Name','histogram of friction data');
-    histogram(reshape(FrictionGrid_measure.friction_mean_true,[],1),edges)
-    %stem(edges,counts)
-    %% find boundary of each cluster
-    method_boundary = 2;
-    if method_boundary ==1 % cluster find the boundaries through nearest neighbor
-        threshold = 0.15; %0.145; %meters, the Diagonal length of grid( 0.2 > threshold >0.141)
-        nbs_neighbor = 8 ; % the number of neighbor nodes for each innner grid
-        road_friction_cluster_boundary = [];
-        boundary_index = [];
-        for i_cluster=1:nbs_cluster
-            cluster_index = find(cluster_idx == i_cluster);
-            cluster_grid = [FrictionGrid_ref.position_x(cluster_index) FrictionGrid_ref.position_y(cluster_index)];
-            cluster_friction = FrictionGrid_ref.friction(cluster_index);
-            Md_cluster_grid = KDTreeSearcher(cluster_grid); % Mdl is a KDTreeSearcher model. By default, the distance metric it uses to search for neighbors is Euclidean distance.
-            [~,D] = knnsearch(Md_cluster_grid,cluster_grid,'k',nbs_neighbor+1);
-            %boundary_index = Idx(D(:,nbs_neighbor+1)>threshold,1);
-            cluster_boundary_index = find(D(:,nbs_neighbor+1)>threshold);
-            road_friction_cluster_boundary = vertcat(road_friction_cluster_boundary,[cluster_grid(cluster_boundary_index,:) cluster_friction(cluster_boundary_index)] );
-            boundary_index =  vertcat(boundary_index,cluster_index(cluster_boundary_index));
-            clear D
-            
-            [row,col] = ind2sub(sz,ind)
-        end
-    elseif method_boundary ==2
-        % step 1 : find the super pixel using the k-means cluster results
-        Label_matrix = zeros(size(FrictionGrid_measure.friction_mean_true)); % cluster matrix
-        for i_cluster=1:nbs_cluster
-            
-            cluster_index = find(cluster_idx == i_cluster);
-            %         [cluster_sub_row,cluster_sub_col] = ind2sub(size(FrictionGrid_ref.friction),cluster_index); % cluster matrix subscripts
-            
-            cluster_friction = mean(FrictionGrid_measure.friction_mean_true(cluster_index),'all'); %value of each cluster
-            
-            Label_matrix(cluster_index) = cluster_friction; % assign values to each cluster
-            
-        end
-        % step 2 : find the boundaries using the boundarymask functon
-        Label_matrix(Label_matrix==0) =1;
-        Label_matrix_pad = padarray(Label_matrix,[1 1],0,'both');
-        
-        boundary_pad = boundarymask(Label_matrix_pad);
-        boundary = boundary_pad(2:end-1,2:end-1);
-        
-        figure(44471)
-        clf
-        Label_matrix(Label_matrix==1) =NaN;
-        image([FrictionGrid_measure.position_s(1,1) FrictionGrid_measure.position_s(1,end)],...
-            [FrictionGrid_measure.position_t(1,1) FrictionGrid_measure.position_t(end,1)],...
-            Label_matrix,'CDataMapping','scaled')
-        %     clf
-        %     im = image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-        %         [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-        %         labeloverlay(FrictionGrid_ref.friction,boundary,'Transparency',0));
-        
-        figure(44472)
-        %     imshow(label2rgb(L))
-        clf
-        surf(FrictionGrid_measure.position_s,FrictionGrid_measure.position_t,Label_matrix);
-        hold on
-        index_ref = 39;
-        plot3(FrictionGrid_ref.position_s(index_ref,:),FrictionGrid_ref.position_t(index_ref,:),ones(size(FrictionGrid_ref.position_t(index_ref,:))),'k--','LineWidth',2)
-        index_lane_center_lateral=[20 58];
-        for i= 1:length(index_lane_center_lateral)
-            plot3(FrictionGrid_ref.position_s(index_lane_center_lateral(i),:),FrictionGrid_ref.position_t(index_lane_center_lateral(i),:),ones(size(FrictionGrid_ref.position_t(index_lane_center_lateral(i),:))),'k-.','LineWidth',1)
-        end
-        % axis tight
-        % grid on
-        colormap parula
-        colorbar
-        % shading interp
-        shading flat
-        lighting phong
-        view(0,90)
-        zlim([0 1])
-        caxis([0.1,0.9])
-        % axis equal
-        box on
-        xlabel('station [m]')
-        ylabel('traversal [m]')
-        zlabel('friction\_coeficient')
-        
-        figure(44481) % original and cluster data
-        clf
-        scatter3(reshape(FrictionGrid_measure.position_s,[],1),reshape(FrictionGrid_measure.position_t,[],1),reshape(FrictionGrid_measure.friction_mean_true,[],1),10,reshape(FrictionGrid_measure.friction_mean_true,[],1),'.');
-        hold on
-        FrictionGrid_measure.boundary = double(boundary);
-        FrictionGrid_measure.boundary(FrictionGrid_measure.boundary==0)= NaN;
-        scatter3(reshape(FrictionGrid_measure.position_s,[],1),reshape(FrictionGrid_measure.position_t,[],1),reshape(FrictionGrid_measure.boundary,[],1),20,reshape(FrictionGrid_measure.boundary,[],1),'r.');
-        
-        view(0,90)
-        zlim([0 1])
-        caxis([0.1,0.9])
-        %     xlim([-5 500])
-        xlabel('s[m]')
-        ylabel('t[m]')
-        box on
-        nbs_boundariy_grid = length(find(FrictionGrid_measure.boundary ==1))
-        
-    else
-        [L,N] = superpixels(FrictionGrid_measure.friction_mean_true,10);
-        
-        mask = boundarymask(L);
-        
-        figure(4447)
-        %     imshow(label2rgb(L))
-        image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-            [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-            L,'CDataMapping','scaled')
-        
-        figure(4448)
-        %     imshow(label2rgb(L))
-        imshow(mask)
-        image([FrictionGrid_ref.position_s(1,1) FrictionGrid_ref.position_s(1,end)],...
-            [FrictionGrid_ref.position_t(1,1) FrictionGrid_ref.position_t(end,1)],...
-            mask,'CDataMapping','scaled')
-        
-    end
-    
-end
-%% Step 6 fill missing
+%% ======== Section 5: fill missing ============
 FrictionGrid_measure.friction_mean_fillmiss = fillmissing(FrictionGrid_measure.friction_mean,'nearest',1,'EndValues','nearest'); % by column
 % FrictionGrid_measure.friction_mean_fillmiss =
 % fillmissing(FrictionGrid_measure.friction_mean,'linear',2,'EndValues','nearest');% by row
