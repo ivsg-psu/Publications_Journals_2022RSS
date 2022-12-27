@@ -80,7 +80,7 @@ To get a local copy up and running follow these simple steps.
    ```sh
    git clone https://github.com/ivsg-psu/Publications_Journals_2022RSS
    ```
-3. Download the data files from: https://pennstateoffice365.sharepoint.com/:f:/s/IntelligentVehiclesandSystemsGroup-Active/Es98yD-dijpIkbBSH6HJoeQBCf0gjxuC3W7m2TcUfvynBw?e=OYc502  into the /Data folder. 
+3. Download the data files from <a href="https://pennstateoffice365.sharepoint.com/:f:/s/IntelligentVehiclesandSystemsGroup-Active/Es98yD-dijpIkbBSH6HJoeQBCf0gjxuC3W7m2TcUfvynBw?e=OYc502"><strong>psu-ivsg data cetner</strong></a> into the /Data folder. 
 
 
 <!-- STRUCTURE OF THE REPO -->
