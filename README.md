@@ -45,12 +45,8 @@ Search for this, and you will find!
       <a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#installation">Installation</a></li>
+	<li><a href="#directories">Top-Level Directories</li>
       </ul>
-    </li>
-    <li><a href="structure">Repo Structure</a>
-	    <ul>
-	    <li><a href="#directories">Top-Level Directories</li>
-	    </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
 	    <ul>
