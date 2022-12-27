@@ -50,13 +50,10 @@ Search for this, and you will find!
     <li><a href="structure">Repo Structure</a>
 	    <ul>
 	    <li><a href="#directories">Top-Level Directories</li>
-	    <li><a href="#dependencies">Dependencies</li>
-	    <li><a href="#functions">Functions</li>
 	    </ul>
     </li>
     <li><a href="#usage">Usage</a></li>
 	    <ul>
-	    <li><a href="#examples">Examples</li>
 	    </ul>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -107,21 +104,14 @@ The following are the top level directories within the repository:
 Additional screenshots, code examples and demos work well in this space. You may
 also link to more resources. -->
 
-### Examples
+1. Download the data files from: https://pennstateoffice365.sharepoint.com/:f:/s/IntelligentVehiclesandSystemsGroup-Active/Es98yD-dijpIkbBSH6HJoeQBCf0gjxuC3W7m2TcUfvynBw?e=OYc502  into the /Data folder. 
 
-1. Run the main script to set up the workspace and demonstrate main outputs, including the figures included here:
-
-   ```sh
-   script_demo_Laps
-   ```
-    This exercises the main function of this code: fcn_Laps_breakDataIntoLaps
-
-2. After running the main script to define the included directories for utility functions, one can then navigate to the Functions directory and run any of the functions or scripts there as well. All functions for this library are found in the Functions sub-folder, and each has an associated test script. Run any of the various test scripts, such as:
+2. Run the main script:
 
    ```sh
-   script_test_fcn_Laps_breakDataIntoLapIndices
+   Script_FrictionClusterAndBoundary_2022.m
    ```
-For more examples, please refer to the [Documentation](https://github.com/ivsg-psu/FeatureExtraction_Association_PointToPointAssociation/tree/main/Documents)
+You may run it section by section to show the middle results. 
 
 
 <!-- LICENSE -->
@@ -138,7 +128,7 @@ This code is still in development (alpha testing)
 ## Contact
 Sean Brennan - sbrennan@psu.edu
 
-Project Link: [hhttps://github.com/ivsg-psu/FeatureExtraction_DataClean_BreakDataIntoLaps](https://github.com/ivsg-psu/FeatureExtraction_DataClean_BreakDataIntoLaps)
+Project Link: [https://github.com/ivsg-psu/Publications_Journals_2022RSS](https://github.com/ivsg-psu/Publications_Journals_2022RSS)
 
 
 
