@@ -100,7 +100,7 @@ The following are the top level directories within the repository:
 Additional screenshots, code examples and demos work well in this space. You may
 also link to more resources. -->
 
-1. Download the data files from: https://pennstateoffice365.sharepoint.com/:f:/s/IntelligentVehiclesandSystemsGroup-Active/Es98yD-dijpIkbBSH6HJoeQBCf0gjxuC3W7m2TcUfvynBw?e=OYc502  into the /Data folder. 
+1. Download the data files from <a href="https://pennstateoffice365.sharepoint.com/:f:/s/IntelligentVehiclesandSystemsGroup-Active/Es98yD-dijpIkbBSH6HJoeQBCf0gjxuC3W7m2TcUfvynBw?e=OYc502"><strong>psu-ivsg data cetner</strong></a> into the /Data folder. 
 
 2. Run the main script:
 
